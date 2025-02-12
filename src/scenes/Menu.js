@@ -18,7 +18,7 @@ class Menu extends Phaser.Scene {
         this.load.image('car', './assets/skater.png')
         this.load.image('child', './assets/kid.png')
         
-        this.load.spritesheet('bus2', './assets/skater.png', {
+        this.load.spritesheet('bus2', './assets/skater2.png', {
             frameWidth: 100,
             frameHeight: 50
         })
@@ -32,17 +32,17 @@ class Menu extends Phaser.Scene {
         this.load.image('hole', './assets/hole.png')
 
         // load audio
-        this.load.audio('music', './assets/music.mp3')
+        this.load.audio('music', './assets/music.wav')
 
         // sound effects
             // https://freesound.org/people/Eponn/sounds/420356/
         this.load.audio('crash', './assets/sound effects/crash.wav')
         
             //https://freesound.org/people/Kurck/sounds/319333/
-        this.load.audio('beep', './assets/sound effects/319333__kurck__toet.ogg')
+        this.load.audio('beep', './assets/sound effects/gunshot.mp3')
         
             //https://freesound.org/people/JamesBradford/sounds/579896/
-        this.load.audio('kidscream', './assets/sound effects/kidscream.mp3')
+        this.load.audio('kidscream', './assets/sound effects/police.mp3')
         
             // https://freesound.org/search/?q=old+lady+scream&f=license%3A%22creative+commons+0%22&w=&tm=0&s=Automatic+by+relevance&advanced=0&g=1&only_p=&cm=0&mm=0
         this.load.audio('ladyscream', './assets/sound effects/ladyscream.wav')
@@ -54,11 +54,11 @@ class Menu extends Phaser.Scene {
     
     create() {
         // title screen
-        this.add.sprite(1280, 720, 'title')
+        this.add.sprite(640, 540, 'title')
 
         // Music
         // song: The Wheels On The Bus (metal cover by Leo Moracchioli)
-            // https://www.youtube.com/watch?v=mGtYLRQh1Gk&ab_channel=FrogLeapStudios
+        // https://samplefocus.com/samples/hip-hop-hard-drums-prod-gzk-rey
         this.bgMusic = this.sound.add('music', {volume: 0.1, loop: true})
 
         if (!this.musicPlayed) {

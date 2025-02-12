@@ -9,7 +9,7 @@ class Play extends Phaser.Scene {
 
     create() {
         // tile sprite
-        this.road = this.add.tileSprite(0, 0, 1000, 720, 'road').setOrigin(0, 0)
+        this.road = this.add.tileSprite(0, 0, 1280, 1080, 'road').setOrigin(0, 0)
 
         // define keys
         keyLEFT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT)
@@ -100,6 +100,9 @@ class Play extends Phaser.Scene {
         })
         this.childSpam = 1
 
+        keyENTER = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER)
+
+
     }
 
     addChild() {
@@ -122,7 +125,11 @@ class Play extends Phaser.Scene {
 
         // START! check
         if (Phaser.Input.Keyboard.JustDown(keyENTER)) {
-        this.startText.visible = false
+
+
+            this.scene.start('instructionScene');
+
+
         }
 
         // make sure bus alive
@@ -140,7 +147,7 @@ class Play extends Phaser.Scene {
             this.physics.world.collide(Bus, this.grandmaGroup, this.gbusCollision, null, this)
             this.physics.world.collide(Bus, this.childGroup, this.cbusCollision, null, this)
         
-        }
+    }
 
 
 
