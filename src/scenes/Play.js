@@ -4,21 +4,29 @@ class Play extends Phaser.Scene {
     }
 
     init() {
-        //this.physics.world.gravity.y = 100
+        // Initialize any global settings here
     }
 
     create() {
-        // tile sprite
-        this.road = this.add.tileSprite(0, 0, 1280, 1080, 'road').setOrigin(0, 0)
+        // Tile sprite
+        this.road = this.add.tileSprite(0, 0, 1280, 1080, 'road').setOrigin(0, 0);
 
-        // define keys
-        keyLEFT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT)
-        keyRIGHT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT)
-        keyUP = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP)
-        keyDOWN = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN)
+        // Define keys
+        keyLEFT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
+        keyRIGHT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
+        keyUP = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
+        keyDOWN = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
 
-        // initialize score
-        this.p1Score = 0
+        // Initialize score
+        this.p1Score = 0;
+
+        // Display the score
+        this.scoreText = this.add.text(20, 20, `Score: ${this.p1Score}`, {
+            fontFamily: 'Arial',
+            fontSize: '32px',
+            color: '#AAFF00',
+            fontWeight: 'bold'
+        });
 
         // START! UI
         this.fireText = this.add.text(game.config.width / 2, game.config.height / 2, 'START!', {
@@ -26,17 +34,17 @@ class Play extends Phaser.Scene {
             fontSize: '32px',
             color: '#AAFF00',
             fontWeight: 'bold'
-        }).setOrigin(0.5)
-        
-        // hide START!
+        }).setOrigin(0.5);
+
+        // Hide START! text
         this.time.delayedCall(2000, () => {
-            this.fireText.visible = false
-        })
+            this.fireText.visible = false;
+        });
 
-        // GAME OVER flag
-        this.gameOver = false
+        // Game over flag
+        this.gameOver = false;
 
-        // bus animations
+        // Bus animations
         this.anims.create({
             key: 'drive',
             frameRate: 6,
@@ -45,147 +53,157 @@ class Play extends Phaser.Scene {
                 start: 0,
                 end: 1
             })
-        })
+        });
 
-        // set up player bus (physics sprite) and set properties
+        // Set up player bus (physics sprite) and set properties
         Bus = this.physics.add.sprite(4, centerY, 'bus').setOrigin(0.5);
         Bus.setCollideWorldBounds(true);
-        Bus.anims.play('drive'),
+        Bus.anims.play('drive');
         Bus.setBounce(0.5);
         Bus.setImmovable();
         Bus.setMaxVelocity(0, 500);
         Bus.setDragY(100);
-        Bus.setDepth(3);             // ensures that paddle z-depth remains above shadow paddles
-        Bus.destroyed = false;       // custom property to track paddle life
-        // Bus.setBlendMode('SCREEN'); // transperency
+        Bus.setDepth(3); // Ensures that bus stays above other sprites
+        Bus.destroyed = false; // Custom property to track bus state
+        Bus.setSize(200, 100, true);
 
-        // define bus velocity
-        this.BusVelocity = 100
+        // Define bus velocity
+        this.BusVelocity = 100;
 
-        this.childSpeed = -360
-        this.grandmaSpeed = -200
+        this.childSpeed = -360;
+        this.grandmaSpeed = -360;
 
-        // define child
-        this.child = 0
-        // define grandma
-        this.grandma = 0
+        // Define child and grandma
+        this.child = 0;
+        this.grandma = 0;
 
-        // child on street
-        this.childGroup = this.add.group({
-            runChildUpdate: true
-        })
-        // grandma on street
-        this.grandmaGroup = this.add.group({
-            runChildUpdate: true
-        })
+        // Groups for children and grandmas
+        this.childGroup = this.add.group({ runChildUpdate: true });
+        this.grandmaGroup = this.add.group({ runChildUpdate: true });
 
-        this.time.delayedCall(1500, () => {
-            this.addChild()
-        })
-        
-        
-        this.time.delayedCall(1500, () => {
-            this.addGrandma()
-        })
+        // Set up repeated spawning for grandmas
+        this.time.addEvent({
+            delay: 2000, // Spawn a grandma every 3 seconds
+            callback: this.addGrandma,
+            callbackScope: this,
+            loop: true
+        });
 
-        // set up cusor keys
+        // Set up repeated spawning for children
+        this.time.addEvent({
+            delay: 5000, // Spawn a child every 5 seconds
+            callback: this.addChild,
+            callbackScope: this,
+            loop: true
+        });
+
+        // Cursor keys
         cursors = this.input.keyboard.createCursorKeys();
 
-        // 20 sec after child
-        this.timer = this.time.addEvent({
-        delay: 20000,
-        callback: this.spamChild,
-        callbackScope: this,
-        loop: true
-        })
-        this.childSpam = 1
+        // Add event for increasing child spawn rate over time
+        this.time.addEvent({
+            delay: 20000,
+            callback: this.spamChild,
+            callbackScope: this,
+            loop: true
+        });
 
-        keyENTER = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER)
+        this.childSpam = 1;
 
+        keyENTER = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
 
+        // Add points over time for surviving
+        this.time.addEvent({
+            delay: 1000, // Every second
+            callback: () => {
+                if (!this.gameOver) {
+                    this.p1Score += 10; // Add 10 points
+                    this.scoreText.setText(`Score: ${this.p1Score}`); // Update score text
+                }
+            },
+            callbackScope: this,
+            loop: true
+        });
     }
 
     addChild() {
-        let speedVary = Phaser.Math. Between(0, 50)
-        this.child = new Child(this, this.childSpeed - speedVary, this.sprite).setScale()
-        this.childGroup.add(this.child)
-        this.child.body.setAllowGravity(false)
-        
+        let speedVary = Phaser.Math.Between(0, 50);
+        let child = new Child(this, this.childSpeed - speedVary, 'childTexture').setScale();
+        this.childGroup.add(child);
+        child.body.setAllowGravity(false);
+        console.log('Child spawned!');
     }
 
     addGrandma() {
-        let speedVary = Phaser.Math. Between(0, 50)
-        this.grandma = new Grandma(this, this.grandmaSpeed - speedVary, this.sprite).setScale()
-        this.grandmaGroup.add(this.grandma)
-        this.grandma.body.setAllowGravity(false)
+        let speedVary = Phaser.Math.Between(0, 50);
+        let grandma = new Grandma(this, this.grandmaSpeed - speedVary, 'grandmaTexture').setScale();
+        this.grandmaGroup.add(grandma);
+        grandma.body.setAllowGravity(false);
+        console.log('Grandma spawned!');
     }
 
     update() {
-        this.road.tilePositionX -= -5
+        this.road.tilePositionX -= -5;
 
         // START! check
         if (Phaser.Input.Keyboard.JustDown(keyENTER)) {
-
-
             this.scene.start('instructionScene');
-
-
         }
 
-        // make sure bus alive
-        if(!Bus.destroyed) {
-            // check player input
-            if(cursors.up.isDown) {
+        // Make sure bus is alive
+        if (!Bus.destroyed) {
+            // Check player input
+            if (cursors.up.isDown) {
                 Bus.body.velocity.y -= this.BusVelocity;
-            } else if(cursors.down.isDown) {
+            } else if (cursors.down.isDown) {
                 Bus.body.velocity.y += this.BusVelocity;
             }
+        }
 
-            }
-            
-            // check for collisions
-            this.physics.world.collide(Bus, this.grandmaGroup, this.gbusCollision, null, this)
-            this.physics.world.collide(Bus, this.childGroup, this.cbusCollision, null, this)
-        
+        // Check for collisions
+        this.physics.world.collide(Bus, this.grandmaGroup, this.gbusCollision, null, this);
+        this.physics.world.collide(Bus, this.childGroup, this.cbusCollision, null, this);
     }
-
-
 
     cbusCollision(Bus, child) {
-         this.sound.play('kidscream', {
-             volume: 1
-         })
-        Bus.destroyed = true
- 
-        this.gameOver = true
-        if (this.gameOver = true) {
-            this.sound.play('crash')
+        this.sound.play('kidscream', { volume: 1 });
+        Bus.destroyed = true;
+        this.gameOver = true;
+
+        if (this.gameOver === true) {
+            this.sound.play('crash');
         }
 
-        this.time.delayedCall(1500, () => {this.scene.start('gameOverScene')})
-        child.destroy()
-
-     }
-
-     gbusCollision(Bus, grandma) {
-         this.sound.play('ladyscream', {
-             volume: 2
-         })
-        Bus.destroyed = true
- 
-        this.gameOver = true
-        if (this.gameOver = true) {
-            this.sound.play('crash')
-        }
-        
-        this.time.delayedCall(1500, () => {this.scene.start('gameOverScene')})   
-        grandma.destroy()  
+        this.time.delayedCall(1500, () => {
+            this.scene.start('gameOverScene');
+        });
+        child.destroy();
     }
+
+    gbusCollision(Bus, grandma) {
+        this.sound.play('ladyscream', { volume: 2 });
+        Bus.destroyed = true;
+        this.gameOver = true;
+
+        if (this.gameOver === true) {
+            this.sound.play('crash');
+        }
+
+        this.time.delayedCall(1500, () => {
+            this.scene.start('gameOverScene');
+        });
+        grandma.destroy();
+    }
+    
 
     spamChild() {
-        this.childSpam += 0.25
-        console.log('here comes the children')
-        
+        this.childSpam += 0.25;
+        console.log('Increased child spawn rate!');
     }
 
+    spamGrandma() {
+        this.GrandmaSpam += 0.25;
+        console.log('Increased child spawn rate!');
     }
+}
+

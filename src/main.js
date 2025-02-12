@@ -2,6 +2,7 @@
 // Game: Skate or Die
 // Completion Time: 20 hrs
 
+
 "use strict"
 
 let config = {
